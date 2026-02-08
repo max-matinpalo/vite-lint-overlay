@@ -66,21 +66,30 @@ const STYLES = `
 
 class SmartErrorOverlay extends HTMLElement {
 	constructor() {
+		// 1. Initialize custom element and attach shadow root
 		super();
 		this.attachShadow({ mode: 'open' });
 		this.root = this.shadowRoot;
 	}
 
 	connectedCallback() {
+		// 1. Inject internal styles and placeholder mount point
 		this.root.innerHTML = `<style>${STYLES}</style><div id="mount"></div>`;
 	}
 
 	setErrors(errors) {
+		// 1. Ensure internal structure is ready for rendering
 		if (!this.root.getElementById('mount')) this.connectedCallback();
+
+		// 2. Hide overlay if there are no errors to display
 		if (!errors || !errors.length) return this.removeAttribute('visible');
+
+		// 3. Activate visibility and categorize diagnostic messages
 		this.setAttribute('visible', '');
 		const errs = errors.filter(e => e.severity === 'error');
 		const warns = errors.filter(e => e.severity === 'warning');
+
+		// 4. Transform error objects into HTML list items
 		const renderList = (list) => list.map(e => {
 			const type = (e.source || 'unk').toLowerCase();
 			const cleanFile = (e.file || 'Global').split(/\/|\\/).slice(-3).join('/');
@@ -98,6 +107,8 @@ class SmartErrorOverlay extends HTMLElement {
 					<div class="msg">${this.escape(e.message)}</div>
 				</li>`;
 		}).join('');
+
+		// 5. Update the DOM with the new error and warning lists
 		this.root.getElementById('mount').innerHTML = `
 			<div class="container">
 				<div class="header"><span class="title">Dev Server Issues</span>
@@ -109,10 +120,13 @@ class SmartErrorOverlay extends HTMLElement {
 						<ul class="list">${renderList(warns)}</ul>` : ''}
 				</div>
 			</div>`;
+
+		// 6. Bind user action to clear visibility manually
 		this.root.getElementById('close').onclick = () => this.removeAttribute('visible');
 	}
 
 	escape(str) {
+		// 1. Prevent XSS by sanitizing dynamic text content
 		return String(str || '').replace(/[&<>"']/g, (m) => ({
 			'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
 		})[m]);
@@ -126,11 +140,14 @@ if (!customElements.get('smart-error-overlay')) {
 
 
 if (import.meta.hot) {
+	// 1. Check for an existing instance or create a new singleton overlay
 	let overlay = document.querySelector('smart-error-overlay');
 	if (!overlay) {
 		overlay = document.createElement('smart-error-overlay');
 		document.body.appendChild(overlay);
 	}
+
+	// 2. Subscribe to Vite's hot module events to trigger UI updates
 	import.meta.hot.on('smart-overlay:update', (data) => {
 		if (overlay) overlay.setErrors(data?.errors || []);
 	});
