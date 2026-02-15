@@ -1,6 +1,6 @@
 {
 	"name": "vite-plugin-lint-overlay",
-	"version": "0.1.3",
+	"version": "0.1.5",
 	"description": "Smart dev-server overlay for ESLint and TypeScript errors.",
 	"license": "MIT",
 	"author": "Max Matinpalo",
@@ -26,5 +26,20 @@
 		"eslint": "^9.0.0 || ^10.0.0",
 		"typescript": "^5.0.0 || ^6.0.0",
 		"vite": "^6.0.0 || ^7.0.0"
-	}
+	},
+	"keywords": [
+		"vite",
+		"vite-plugin",
+		"eslint",
+		"typescript",
+		"lint",
+		"overlay",
+		"dev-server",
+		"developer-tools",
+		"diagnostics",
+		"worker",
+		"error-overlay",
+		"frontend",
+		"dx"
+	]
 }
