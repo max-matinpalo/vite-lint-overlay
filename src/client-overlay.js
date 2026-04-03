@@ -24,6 +24,12 @@ const STYLES = `
 		flex-shrink: 0;
 	}
 	.title { font-weight: bold; font-size: 14px; color: #ffffff; }
+	.actions { display: flex; gap: 12px; align-items: center; }
+	.btn {
+		cursor: pointer; background: #333333; color: #ffffff; border: none;
+		padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;
+	}
+	.btn:hover { background: #555555; }
 	.close {
 		cursor: pointer; background: transparent; border: none; color: #999999;
 		font-size: 20px; line-height: 1; padding: 0;
@@ -63,92 +69,86 @@ const STYLES = `
 	}
 `;
 
-
 class SmartErrorOverlay extends HTMLElement {
 	constructor() {
-		// 1. Initialize custom element and attach shadow root
 		super();
-		this.attachShadow({ mode: 'open' });
+		this.attachShadow({ mode: "open" });
 		this.root = this.shadowRoot;
 	}
 
 	connectedCallback() {
-		// 1. Inject internal styles and placeholder mount point
 		this.root.innerHTML = `<style>${STYLES}</style><div id="mount"></div>`;
 	}
 
 	setErrors(errors) {
-		// 1. Ensure internal structure is ready for rendering
-		if (!this.root.getElementById('mount')) this.connectedCallback();
+		if (!this.root.getElementById("mount")) this.connectedCallback();
+		if (!errors || !errors.length) return this.removeAttribute("visible");
 
-		// 2. Hide overlay if there are no errors to display
-		if (!errors || !errors.length) return this.removeAttribute('visible');
+		this.setAttribute("visible", "");
+		const errs = errors.filter(e => e.severity === "error");
+		const warns = errors.filter(e => e.severity === "warning");
 
-		// 3. Activate visibility and categorize diagnostic messages
-		this.setAttribute('visible', '');
-		const errs = errors.filter(e => e.severity === 'error');
-		const warns = errors.filter(e => e.severity === 'warning');
-
-		// 4. Transform error objects into HTML list items
 		const renderList = (list) => list.map(e => {
-			const type = (e.source || 'unk').toLowerCase();
-			const cleanFile = (e.file || 'Global').split(/\/|\\/).slice(-3).join('/');
-			const hasPath = /[\\/]/.test(e.file || '');
+			const type = (e.source || "unk").toLowerCase();
+			const cleanFile = (e.file || "Global").split(/\/|\\/).slice(-3).join("/");
+			const hasPath = /[\\/]/.test(e.file || "");
 			const fileDisplay = hasPath && cleanFile !== e.file
-				? `.../${cleanFile}` : (e.file || 'Global');
+				? `.../${cleanFile}` : (e.file || "Global");
 			return `
-				<li class="item ${e.severity || 'error'}">
+				<li class="item ${e.severity || "error"}">
 					<div class="meta">
-						<span class="badge ${type}">${e.source || 'UNK'}</span>
+						<span class="badge ${type}">${e.source || "UNK"}</span>
 						<span class="file" title="${this.escape(e.file)}">
-							${this.escape(fileDisplay)}${e.line ? ':' + e.line : ''}
+							${this.escape(fileDisplay)}${e.line ? ":" + e.line : ""}
 						</span>
 					</div>
 					<div class="msg">${this.escape(e.message)}</div>
 				</li>`;
-		}).join('');
+		}).join("");
 
-		// 5. Update the DOM with the new error and warning lists
-		this.root.getElementById('mount').innerHTML = `
+		this.root.getElementById("mount").innerHTML = `
 			<div class="container">
-				<div class="header"><span class="title">Dev Server Issues</span>
-					<button id="close" class="close">×</button></div>
+				<div class="header">
+					<span class="title">Dev Server Issues</span>
+					<div class="actions">
+						<button id="reset" class="btn">Hard Reset</button>
+						<button id="close" class="close">×</button>
+					</div>
+				</div>
 				<div class="body">
 					${errs.length ? `<h2 class="red">Errors (${errs.length})</h2>
-						<ul class="list">${renderList(errs)}</ul>` : ''}
+						<ul class="list">${renderList(errs)}</ul>` : ""}
 					${warns.length ? `<h2 class="orange">Warnings (${warns.length})</h2>
-						<ul class="list">${renderList(warns)}</ul>` : ''}
+						<ul class="list">${renderList(warns)}</ul>` : ""}
 				</div>
 			</div>`;
 
-		// 6. Bind user action to clear visibility manually
-		this.root.getElementById('close').onclick = () => this.removeAttribute('visible');
+		this.root.getElementById("close").onclick = () => this.removeAttribute("visible");
+		this.root.getElementById("reset").onclick = () => {
+			this.removeAttribute("visible");
+			import.meta.hot?.send("smart-overlay:reset");
+		};
 	}
 
 	escape(str) {
-		// 1. Prevent XSS by sanitizing dynamic text content
-		return String(str || '').replace(/[&<>"']/g, (m) => ({
-			'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+		return String(str || "").replace(/[&<>"']/g, (m) => ({
+			"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
 		})[m]);
 	}
 }
 
-
-if (!customElements.get('smart-error-overlay')) {
-	customElements.define('smart-error-overlay', SmartErrorOverlay);
+if (!customElements.get("smart-error-overlay")) {
+	customElements.define("smart-error-overlay", SmartErrorOverlay);
 }
 
-
 if (import.meta.hot) {
-	// 1. Check for an existing instance or create a new singleton overlay
-	let overlay = document.querySelector('smart-error-overlay');
+	let overlay = document.querySelector("smart-error-overlay");
 	if (!overlay) {
-		overlay = document.createElement('smart-error-overlay');
+		overlay = document.createElement("smart-error-overlay");
 		document.body.appendChild(overlay);
 	}
 
-	// 2. Subscribe to Vite's hot module events to trigger UI updates
-	import.meta.hot.on('smart-overlay:update', (data) => {
+	import.meta.hot.on("smart-overlay:update", (data) => {
 		if (overlay) overlay.setErrors(data?.errors || []);
 	});
 }

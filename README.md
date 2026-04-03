@@ -54,8 +54,10 @@ export default defineConfig({
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | **rootDir** | `string` | `'src'` | Root directory to watch and lint for ESLint issues. |
-| **ts** | `boolean` | `false` | Set to `true` to enable the TypeScript compiler check. |
+| **ts** | `boolean` | `true` | Set to `false` to disable the TypeScript compiler check. |
+| **eslint** | `boolean` | `true` | Set to `false` to disable ESLint linting. |
 | **tsconfigPath** | `string` | `''` | Path to `tsconfig`. Defaults to `tsconfig.json`. |
+| **eslintPath** | `string` | `''` | Path to `eslint config`. Defaults to `eslint.config.js`. |
 
 
 ## How it works under the hood
