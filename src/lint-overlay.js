@@ -7,12 +7,14 @@ export default function lintOverlay(props = {}) {
 	const {
 		rootDir: rawRoot = "src",
 		tsconfigPath = "",
+		tsConfigPath = "",
 		eslintPath = "",
 		ts = true,
 		eslint = true
 	} = props;
 
 	const rootDir = String(rawRoot).trim().replace(/\/+$/, "") || "src";
+	const finalTsConfig = tsConfigPath || tsconfigPath;
 	const virtualId = "virtual:lint-overlay-client.js";
 	const resolvedVirtualId = "\0" + virtualId;
 	const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -77,7 +79,7 @@ export default function lintOverlay(props = {}) {
 				if (tsWorker) tsWorker.terminate();
 				tsWorker = new Worker(
 					new URL("./ts-worker.js", import.meta.url),
-					{ type: "module", workerData: { tsconfigPath } }
+					{ type: "module", workerData: { tsconfigPath: finalTsConfig } }
 				);
 				tsWorker.on("error", (e) => handleCrash("TS", `Error: ${e.message}`));
 				tsWorker.on("exit", (c) => c !== 0 && handleCrash("TS", `Died: ${c}`));

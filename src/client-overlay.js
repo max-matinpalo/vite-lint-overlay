@@ -12,7 +12,7 @@ const STYLES = `
 	}
 	.container {
 		background: #1e1e1e; color: #d4d4d4;
-		width: 100%; max-width: 900px; max-height: 800px;
+		width: 100%; max-width: 900px; min-width: 250px; max-height: 800px;
 		border-radius: 8px; border: 1px solid #333333;
 		display: flex; flex-direction: column;
 		box-shadow: 0 20px 50px #00000080; overflow: hidden;
@@ -111,7 +111,7 @@ class SmartErrorOverlay extends HTMLElement {
 				<div class="header">
 					<span class="title">Dev Server Issues</span>
 					<div class="actions">
-						<button id="reset" class="btn">Hard Reset</button>
+						<button id="reset" class="btn">Reset</button>
 						<button id="close" class="close">×</button>
 					</div>
 				</div>
